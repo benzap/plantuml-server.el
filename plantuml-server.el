@@ -1,7 +1,6 @@
 ;; Copyright (C) 2013
 
 ;; Author: Benjamin Zaporzan  <benzaporzan@gmail.com>
-;; Maintainer: Mark A. Hershberger <mah@everybody.org>
 ;; Keywords: uml, export, plantuml
 
 (defconst plantuml-url "http://www.plantuml.com:80/plantuml/"
@@ -15,12 +14,6 @@
 
 (defconst plantuml-url-ascii (concat plantuml-url "txt/")
   "URL to send the key for an ascii copy of the result")
-
-(defconst plantuml-form-text-field "text"
-  "name of the <textarea /> form field")
-
-(defconst plantuml-form-url-field "url"
-  "name of the <input /> form field holding the url")
 
 (defun plantuml-strip-http-headers (httpbuffer)
   "Strip headers from HTTP reply."
@@ -61,21 +54,31 @@ request, perform the provided CALLBACK"
 	
         (url-retrieve-synchronously url)))
 
-(plantuml-url-http-post "hello" 
-			(lambda (args)
-			  (plantuml-strip-http-headers (current-buffer))))
-				  
-
 (defun plantuml-eval-to-other-window (&optional begin end)
   (interactive "r")
   "Evaluates the region and returns a plantuml ascii diagram in a
-  new buffer in the other window"
+  new buffer in the other window. It also places a link to the
+  SVG equivalent page"
   (let* ((current-string (buffer-substring begin end))
-	(ascii-string (plantuml-get-ascii-diagram current-string)))
+	(ascii-string (plantuml-get-ascii-diagram current-string))
+	(svg-url (plantuml-get-svg-url current-string)))
+    (if (get-buffer "*PlantUML-Ascii*")
+	(kill-buffer "*PlantUML-Ascii*"))
     (switch-to-buffer-other-window "*PlantUML-Ascii*")
     (set-buffer "*PlantUML-Ascii*")
-    (erase-buffer)
-    (insert ascii-string)))
+    (insert ascii-string)
+    (insert (format "\nSVG: %s" svg-url))
+    (read-only-mode)
+    (other-window 0)
+    ))
+
+(defun plantuml-eval-to-browser (&optional begin end)
+  (interactive "r")
+  "Evaluates the region and goes to the URL displaying an SVG of
+  the current region"
+  (let* ((current-string (buffer-substring begin end))
+	 (svg-url (plantuml-get-svg-url current-string)))
+    (browse-url svg-url)))
 
 (defun plantuml-get-ascii-url (string)
   "Gets the ascii diagram produced by the given STRING. STRING
@@ -91,6 +94,20 @@ should be a valid plantuml text representation of a diagram"
 		       urls))      
       )ascii-url))
 
+(defun plantuml-get-svg-url (string)
+  "Gets the url diagram produced by the given STRING. STRING
+should be a valid plantuml text representation of a diagram"
+  (let (svg-url
+	(html-buffer (plantuml-url-http-post-synchronously string))
+	urls)
+    (save-excursion
+      (set-buffer html-buffer)
+      (setq urls (plantuml-regex-get-urls html-buffer))
+      (setq svg-url (find-if 
+		       (lambda (arg) (string-match plantuml-url-svg arg)) 
+		       urls))      
+      )svg-url))
+
 (defun plantuml-get-ascii-diagram (string)
   "Evaluates the string, and returns a ascii representation of
   the result"
@@ -100,18 +117,18 @@ should be a valid plantuml text representation of a diagram"
       (set-buffer (url-retrieve-synchronously ascii-url))
       (plantuml-strip-http-headers (current-buffer))
       (setq ascii-string (buffer-string)))))
-    
-(setq test-diagram "@startuml
-Alice -> Bob: Authentication Request
-Bob --> Alice: Authentication Response
 
-Alice -> Bob: Another authentication Request
-Alice <-- Bob: another authentication Response
-@enduml")
+(defun plantuml-get-svg-diagram (string)
+  "Evaluates the string, and returns a svg representation of
+  the result"
+  (let ((svg-url (plantuml-get-svg-url string))
+	svg-string)
+    (save-excursion
+      (set-buffer (url-retrieve-synchronously svg-url))
+      (plantuml-strip-http-headers (current-buffer))
+      (setq svg-string (buffer-string)))))
 
-
-
-(plantuml-get-ascii-url "hello there")
+;(plantuml-get-svg-diagram test-diagram)    
 
 (defun plantuml-regex-get-urls (buffer)
   "From the provided buffer, get all of the URLs that have the
@@ -124,16 +141,10 @@ Alice <-- Bob: another authentication Response
 	 (add-to-list 'urls (match-string 1)))
        )urls))
 
-(progn
-  (set-buffer (plantuml-url-http-post-synchronously "hello"))
-  (if (get-buffer "*PlantUML-HTTP*")
-      (kill-buffer "*PlantUML-HTTP*"))
-  (rename-buffer "*PlantUML-HTTP*")
-  (plantuml-strip-http-headers (current-buffer))
-  (switch-to-buffer (current-buffer))
-  (plantuml-regex-get-urls (current-buffer)))
+(setq test-diagram "@startuml
+Alice -> Bob: Authentication Request
+Bob --> Alice: Authentication Response
 
-(find-if (lambda (arg) (string-match plantuml-url-ascii arg)) 
-	 '("http://www.plantuml.com:80/plantuml/txt/"
-	   "http://www.plantuml.com:80/plantuml/svg/"
-	   "http://www.plantuml.com:80/plantuml/img/"))
+Alice -> Bob: Another authentication Request
+Alice <-- Bob: another authentication Response
+@enduml")
