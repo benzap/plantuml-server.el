@@ -1,6 +1,6 @@
 * plantuml-server.el
   This is a tool used to evaluate code written in the [[http://plantuml.sourceforge.net/index.html][plantuml]]
-  scripting language, and create the resulting diagram. The resulting
+  scripting language, and create diagrams from it. The resulting
   diagrams are created on the plantuml server. This is especially
   useful for quickly looking at sections of plantuml code.
 
