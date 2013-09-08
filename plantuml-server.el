@@ -3,16 +3,16 @@
 ;; Author: Benjamin Zaporzan  <benzaporzan@gmail.com>
 ;; Keywords: uml, export, plantuml
 
-(defconst plantuml-url "http://www.plantuml.com:80/plantuml/"
+(defconst plantuml-url "http://www.plantuml.com:80/plantuml"
   "URL to the plantuml main page")
 
-(defconst plantuml-url-form (concat plantuml-url "form/")
+(defconst plantuml-url-form (concat plantuml-url "/form")
   "URL to the plantuml server form")
 
-(defconst plantuml-url-svg (concat plantuml-url "svg/")
+(defconst plantuml-url-svg (concat plantuml-url "/svg")
   "URL to send the key for an svg copy of the result")
 
-(defconst plantuml-url-ascii (concat plantuml-url "txt/")
+(defconst plantuml-url-ascii (concat plantuml-url "/txt")
   "URL to send the key for an ascii copy of the result")
 
 (defun plantuml-strip-http-headers (httpbuffer)
@@ -53,6 +53,10 @@ request, perform the provided CALLBACK"
 				      (url-hexify-string text))))
 	
         (url-retrieve-synchronously url)))
+
+
+(switch-to-buffer (plantuml-url-http-post-synchronously test-diagram))
+  
 
 (defun plantuml-eval-to-other-window (&optional begin end)
   (interactive "r")
@@ -123,9 +127,7 @@ should be a valid plantuml text representation of a diagram"
     (save-excursion
       (set-buffer (url-retrieve-synchronously svg-url))
       (plantuml-strip-http-headers (current-buffer))
-      (setq svg-string (buffer-string)))))
-
-;(plantuml-get-svg-diagram test-diagram)    
+      (setq svg-string (buffer-string)))))   
 
 (defun plantuml-regex-get-urls (buffer)
   "From the provided buffer, get all of the URLs that have the
@@ -137,13 +139,5 @@ should be a valid plantuml text representation of a diagram"
       (while (re-search-forward regex-url nil t)
 	 (add-to-list 'urls (match-string 1)))
        )urls))
-
-(setq test-diagram "@startuml
-Alice -> Bob: Authentication Request
-Bob --> Alice: Authentication Response
-
-Alice -> Bob: Another authentication Request
-Alice <-- Bob: another authentication Response
-@enduml")
 
 (provide 'plantuml-server)
