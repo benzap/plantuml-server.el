@@ -54,10 +54,6 @@ request, perform the provided CALLBACK"
 	
         (url-retrieve-synchronously url)))
 
-
-(switch-to-buffer (plantuml-url-http-post-synchronously test-diagram))
-  
-
 (defun plantuml-eval-to-other-window (&optional begin end)
   (interactive "r")
   "Evaluates the region and returns a plantuml ascii diagram in a
