@@ -1,0 +1,62 @@
+* plantuml-server.el
+  This is a tool used to evaluate code written in the plantuml
+  scripting language, and create the resulting diagram. The resulting
+  diagrams are created on the plantuml server. This is especially
+  useful for quickly looking at sections of plantuml code.
+
+  The first function *plantuml-eval-to-other-window* is used to
+  evaluate a region to a separate buffer window to view the resulting
+  diagram in ascii. Currently it is very buggy, due to several
+  restrictions on how certain arguments are handled.
+
+  The function *plantuml-eval-to-browser* evaluates the region on the
+  screen, and opens your browser to display the resulting SVG for the
+  given evaluated region.
+
+  As an example, evaluating this given snippet of code:
+  
+#+BEGIN_EXAMPLE
+  @startuml
+  participant Bob
+  actor Alice
+  
+  Bob -> Alice : hello
+  Alice -> Bob : Is it ok?
+  @enduml
+#+END_EXAMPLE
+
+  with *plantuml-eval-to-other-window* will produce a separate buffer
+  called *PlantUML-Ascii* containing the text
+
+#+BEGIN_EXAMPLE
+                      ,-.  
+                      `-'  
+                      /|\  
+     ,---.             |   
+     |Bob|            / \  
+     `-+-'           Alice 
+       |    hello      |   
+       |-------------->|   
+       |               |   
+       |  Is it ok?    |   
+       |<--------------|   
+     ,-+-.           Alice 
+     |Bob|            ,-.  
+     `---'            `-'  
+                      /|\  
+                       |   
+                      / \   
+#+END_EXAMPLE
+
+  If I instead were to use the command *plantuml-eval-to-browser*, it
+  would open the default web browser, and display [[http://www.plantuml.com/plantuml/svg/AqWiAibCpYn8p2jHSCfFuafCBialKd3CoKnEvU822YZesa5u2bOA6QavEVbS41vG62HhfU1Ph91Pef2VRGy0][this]]
+
+* installation
+  Installation requires you to place plantuml-server.el somewhere on
+  your emacs path, and call:
+
+  #+BEGIN_SRC emacs-lisp
+   (require 'plantuml-server)
+  #+END_SRC
+
+  

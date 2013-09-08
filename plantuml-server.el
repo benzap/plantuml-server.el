@@ -60,17 +60,14 @@ request, perform the provided CALLBACK"
   new buffer in the other window. It also places a link to the
   SVG equivalent page"
   (let* ((current-string (buffer-substring begin end))
-	(ascii-string (plantuml-get-ascii-diagram current-string))
-	(svg-url (plantuml-get-svg-url current-string)))
+	(ascii-string (plantuml-get-ascii-diagram current-string)))
     (if (get-buffer "*PlantUML-Ascii*")
 	(kill-buffer "*PlantUML-Ascii*"))
     (switch-to-buffer-other-window "*PlantUML-Ascii*")
     (set-buffer "*PlantUML-Ascii*")
     (insert ascii-string)
-    (insert (format "\nSVG: %s" svg-url))
     (read-only-mode)
-    (other-window 0)
-    ))
+    (other-window 0)))
 
 (defun plantuml-eval-to-browser (&optional begin end)
   (interactive "r")
@@ -148,3 +145,5 @@ Bob --> Alice: Authentication Response
 Alice -> Bob: Another authentication Request
 Alice <-- Bob: another authentication Response
 @enduml")
+
+(provide 'plantuml-server)
